@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
@@ -24,16 +24,26 @@ const itemFormSchema = z.object({
   purchaseDate: z.string().optional(),
   expiryDate: z.string().optional(),
   warrantyExpiry: z.string().optional(),
+  barcode: z.string().optional(),
 });
 
 type ItemFormData = z.infer<typeof itemFormSchema>;
 
+interface PrefilledData {
+  name?: string;
+  category?: string;
+  description?: string;
+  value?: number;
+  barcode?: string;
+}
+
 interface ItemFormProps {
   onSuccess: () => void;
   onCancel: () => void;
+  prefilledData?: PrefilledData | null;
 }
 
-export function ItemForm({ onSuccess, onCancel }: ItemFormProps) {
+export function ItemForm({ onSuccess, onCancel, prefilledData }: ItemFormProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -42,20 +52,48 @@ export function ItemForm({ onSuccess, onCancel }: ItemFormProps) {
     queryKey: ["/api/categories"],
   });
 
+  // Find matching category ID from prefilled data
+  const getMatchingCategoryId = (categoryName?: string) => {
+    if (!categoryName || !categories.length) return "";
+    const matchingCategory = categories.find(cat => 
+      cat.name.toLowerCase() === categoryName.toLowerCase()
+    );
+    return matchingCategory?.id.toString() || "";
+  };
+
   const form = useForm<ItemFormData>({
     resolver: zodResolver(itemFormSchema),
     defaultValues: {
-      name: "",
-      description: "",
-      categoryId: "",
+      name: prefilledData?.name || "",
+      description: prefilledData?.description || "",
+      categoryId: getMatchingCategoryId(prefilledData?.category),
       location: "",
       purchasePrice: "",
-      currentValue: "",
+      currentValue: prefilledData?.value ? prefilledData.value.toString() : "",
       purchaseDate: "",
       expiryDate: "",
       warrantyExpiry: "",
+      barcode: prefilledData?.barcode || "",
     },
   });
+
+  // Update form when prefilled data changes
+  useEffect(() => {
+    if (prefilledData) {
+      form.reset({
+        name: prefilledData.name || "",
+        description: prefilledData.description || "",
+        categoryId: getMatchingCategoryId(prefilledData.category),
+        location: "",
+        purchasePrice: "",
+        currentValue: prefilledData.value ? prefilledData.value.toString() : "",
+        purchaseDate: "",
+        expiryDate: "",
+        warrantyExpiry: "",
+        barcode: prefilledData.barcode || "",
+      });
+    }
+  }, [prefilledData, categories, form]);
 
   const createItemMutation = useMutation({
     mutationFn: async (data: ItemFormData) => {
@@ -211,6 +249,20 @@ export function ItemForm({ onSuccess, onCancel }: ItemFormProps) {
             className="mt-1"
           />
         </div>
+
+        {/* Barcode field */}
+        {prefilledData?.barcode && (
+          <div>
+            <Label htmlFor="barcode">Barcode</Label>
+            <Input
+              id="barcode"
+              {...form.register("barcode")}
+              placeholder="Product barcode"
+              className="mt-1"
+              readOnly
+            />
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-4">
           <div>

@@ -6,8 +6,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Camera, Barcode, QrCode, Mic, Keyboard, X } from "lucide-react";
+import { Camera, Barcode, QrCode, Mic, Keyboard, X, ArrowLeft } from "lucide-react";
 import { ItemForm } from "./item-form";
+import { PhotoScanner } from "./photo-scanner";
+import { BarcodeScanner } from "./barcode-scanner";
+import { QRCodeManager } from "./qr-code-manager";
+import { VoiceInput } from "./voice-input";
 
 interface AddItemModalProps {
   isOpen: boolean;
@@ -16,8 +20,17 @@ interface AddItemModalProps {
 
 type AddMethod = "photo" | "barcode" | "qr" | "voice" | "manual" | null;
 
+interface PrefilledData {
+  name?: string;
+  category?: string;
+  description?: string;
+  value?: number;
+  barcode?: string;
+}
+
 export function AddItemModal({ isOpen, onClose }: AddItemModalProps) {
   const [selectedMethod, setSelectedMethod] = useState<AddMethod>(null);
+  const [prefilledData, setPrefilledData] = useState<PrefilledData | null>(null);
 
   const handleMethodSelect = (method: AddMethod) => {
     setSelectedMethod(method);
@@ -25,11 +38,55 @@ export function AddItemModal({ isOpen, onClose }: AddItemModalProps) {
 
   const handleBack = () => {
     setSelectedMethod(null);
+    setPrefilledData(null);
   };
 
   const handleClose = () => {
     setSelectedMethod(null);
+    setPrefilledData(null);
     onClose();
+  };
+
+  const handlePhotoDetection = (predictions: any[]) => {
+    if (predictions.length > 0) {
+      const prediction = predictions[0];
+      setPrefilledData({
+        name: prediction.className,
+        category: prediction.suggestedCategory,
+        description: `Detected via photo scan with ${Math.round(prediction.probability * 100)}% confidence`
+      });
+      setSelectedMethod("manual");
+    }
+  };
+
+  const handleBarcodeScanned = (productData: any) => {
+    setPrefilledData({
+      name: productData.name,
+      category: productData.category,
+      description: productData.description,
+      barcode: productData.barcode,
+      value: productData.price ? parseFloat(productData.price.replace('$', '')) : undefined
+    });
+    setSelectedMethod("manual");
+  };
+
+  const handleQRScanned = (qrData: any) => {
+    setPrefilledData({
+      name: qrData.name,
+      category: qrData.category,
+      description: qrData.description,
+      value: qrData.value
+    });
+    setSelectedMethod("manual");
+  };
+
+  const handleVoiceResult = (voiceData: any) => {
+    setPrefilledData({
+      name: voiceData.suggestedName,
+      category: voiceData.suggestedCategory,
+      description: voiceData.suggestedDescription || voiceData.transcript
+    });
+    setSelectedMethod("manual");
   };
 
   const addMethods = [
@@ -37,7 +94,7 @@ export function AddItemModal({ isOpen, onClose }: AddItemModalProps) {
       id: "photo" as const,
       label: "Photo Scan",
       icon: Camera,
-      description: "Take a photo to identify items",
+      description: "AI-powered object detection",
       primary: true,
     },
     {
@@ -51,14 +108,14 @@ export function AddItemModal({ isOpen, onClose }: AddItemModalProps) {
       id: "qr" as const,
       label: "QR Code",
       icon: QrCode,
-      description: "Scan QR code",
+      description: "Scan or generate QR codes",
       primary: false,
     },
     {
       id: "voice" as const,
       label: "Voice",
       icon: Mic,
-      description: "Speak to add items",
+      description: "Voice-to-text input",
       primary: false,
     },
   ];
@@ -70,33 +127,56 @@ export function AddItemModal({ isOpen, onClose }: AddItemModalProps) {
           <div className="p-6">
             <DialogHeader className="flex flex-row items-center justify-between space-y-0 mb-6">
               <DialogTitle className="text-xl">
-                {selectedMethod === "manual" ? "Add Item" : "Add Item - Coming Soon"}
+                {selectedMethod === "manual" && "Add Item"}
+                {selectedMethod === "photo" && "Photo Scanner"}
+                {selectedMethod === "barcode" && "Barcode Scanner"}
+                {selectedMethod === "qr" && "QR Code Manager"}
+                {selectedMethod === "voice" && "Voice Input"}
               </DialogTitle>
               <div className="flex space-x-2">
                 <Button variant="ghost" size="icon" onClick={handleBack}>
+                  <ArrowLeft className="w-4 h-4" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={handleClose}>
                   <X className="w-4 h-4" />
                 </Button>
               </div>
             </DialogHeader>
             
-            {selectedMethod === "manual" ? (
-              <ItemForm onSuccess={handleClose} onCancel={handleBack} />
-            ) : (
-              <div className="text-center py-8">
-                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                  {selectedMethod === "photo" && <Camera className="w-8 h-8 text-muted-foreground" />}
-                  {selectedMethod === "barcode" && <Barcode className="w-8 h-8 text-muted-foreground" />}
-                  {selectedMethod === "qr" && <QrCode className="w-8 h-8 text-muted-foreground" />}
-                  {selectedMethod === "voice" && <Mic className="w-8 h-8 text-muted-foreground" />}
-                </div>
-                <h3 className="text-lg font-semibold mb-2">Coming Soon</h3>
-                <p className="text-muted-foreground mb-6">
-                  This feature is currently under development. For now, please use manual entry.
-                </p>
-                <Button onClick={() => setSelectedMethod("manual")} className="tally-primary">
-                  Use Manual Entry
-                </Button>
-              </div>
+            {selectedMethod === "manual" && (
+              <ItemForm 
+                onSuccess={handleClose} 
+                onCancel={handleBack}
+                prefilledData={prefilledData}
+              />
+            )}
+            
+            {selectedMethod === "photo" && (
+              <PhotoScanner 
+                onObjectDetected={handlePhotoDetection}
+                onCancel={handleBack}
+              />
+            )}
+            
+            {selectedMethod === "barcode" && (
+              <BarcodeScanner 
+                onBarcodeDetected={handleBarcodeScanned}
+                onCancel={handleBack}
+              />
+            )}
+            
+            {selectedMethod === "qr" && (
+              <QRCodeManager 
+                onQRDataScanned={handleQRScanned}
+                onCancel={handleBack}
+              />
+            )}
+            
+            {selectedMethod === "voice" && (
+              <VoiceInput 
+                onVoiceResult={handleVoiceResult}
+                onCancel={handleBack}
+              />
             )}
           </div>
         ) : (
@@ -122,6 +202,7 @@ export function AddItemModal({ isOpen, onClose }: AddItemModalProps) {
                     <Icon className="w-6 h-6" />
                     <div className="text-center">
                       <p className="text-sm font-medium">{method.label}</p>
+                      <p className="text-xs opacity-80">{method.description}</p>
                     </div>
                   </Button>
                 );
