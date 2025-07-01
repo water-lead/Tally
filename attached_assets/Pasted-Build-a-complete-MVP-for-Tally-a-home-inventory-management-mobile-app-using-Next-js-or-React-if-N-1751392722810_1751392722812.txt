@@ -1,0 +1,123 @@
+Build a complete MVP for Tally, a home inventory management mobile app, using Next.js (or React if Next.js is unavailable), Tailwind CSS, Firebase (for auth, Firestore, and storage), and TypeScript. The app should be clean, mobile-friendly, and production-ready.**
+
+### **Core Description:**
+
+Tally helps users **track, manage, and organize their home inventory** using:
+
+* **Barcode scanning (UPC/EAN)**
+* **QR code generation and scanning**
+* **Photo + AI item recognition**
+* **Voice input**
+* **Manual entry**
+
+Users should be able to **categorize, tag locations, add values, attach receipts/warranties, and set expiry reminders**.
+
+### **Features to implement:**
+
+---
+
+#### 1️⃣ **User Authentication**
+
+* Email/password and Google login with Firebase Auth.
+* User-specific data storage in Firestore.
+
+---
+
+#### 2️⃣ **Dashboard**
+
+* Displays:
+
+  * Total items
+  * Total estimated value
+  * Upcoming expiry/warranty reminders
+  * Categories summary (e.g., Pantry, Electronics, Furniture)
+
+---
+
+#### 3️⃣ **Add Item Flow**
+
+* **Scan Barcode:**
+
+  * Use `zxing-js` or similar to scan UPC/EAN via webcam or mobile camera.
+  * Query `UPCItemDB` or a placeholder API to auto-fill product details.
+
+* **Generate & Scan QR Codes:**
+
+  * Generate QR codes for manually entered items using `qrcode.react`.
+  * Enable scanning QR codes to retrieve item details.
+
+* **Photo + AI Recognition:**
+
+  * Use a simple TensorFlow\.js model or `ml5.js` with MobileNet for object detection.
+  * Suggest item names and categories based on photo analysis.
+
+* **Voice Input:**
+
+  * Integrate Web Speech API for voice-to-text to add item names.
+
+* **Manual Entry:**
+
+  * Users can manually input:
+
+    * Item name, category, location tag
+    * Purchase date, expiry date, warranty expiration
+    * Purchase price, estimated current value
+    * Photo upload
+    * Receipt upload
+
+#### 4️⃣ **Item Management**
+
+* View item details (image, metadata, receipts).
+* Edit/update item details.
+* Delete items.
+* Filter by category, location, expiry soon, high value.
+
+#### 5️⃣ **Smart Features**
+
+* Expiry and warranty reminders using Firebase Functions.
+* Suggested donation alerts for unused items (> 1 year).
+* Simple inventory valuation charts using `recharts` or `chart.js`.
+
+#### 6️⃣ **Move Mode**
+
+* Allow users to group items into “Move Boxes” with generated QR codes for each box for easy scanning during moves.
+
+#### 7️⃣ **Insurance Mode**
+
+* Export inventory list with photos, receipts, and values as a PDF for insurance purposes.
+
+#### 8️⃣ **Blockchain Integration (Optional)**
+
+* Include a simple Ethereum smart contract interaction (using `ethers.js`) to store a hash of high-value item metadata on-chain for provenance.
+* Allow users to view confirmation that the item hash is stored on-chain.
+
+### **UI/UX Requirements:**
+
+* Clean, modern interface with Tailwind CSS.
+* Use cards with item photos for browsing.
+* Modal-based add/edit forms.
+* Dark mode toggle.
+* Mobile-first design with a responsive grid layout.
+
+### **Project Structure:**
+
+* `pages/` or `src/pages/` for Next.js routing.
+* `components/` for reusable UI elements (ItemCard, ScannerModal, AddItemForm).
+* `lib/` for Firebase and blockchain utilities.
+* `hooks/` for reusable logic.
+* `styles/` for global styles if needed.
+* Use TypeScript with clear type definitions for items and user data.
+
+### **Additional Instructions:**
+
+* Use clear, modular, clean code with comments for clarity.
+* Pre-fill the app with a few demo items if no data exists for easier testing.
+* Deployable on Vercel or Firebase Hosting.
+
+Ensure the app is explicitly designed as a mobile application with a clean, touch-friendly UI. Implement light and dark themes:
+
+* **Light Theme:** White background with light purple accents for buttons, highlights, and headers.
+* **Dark Theme:** Dark grey background with deep purple accents for buttons, highlights, and headers.
+* Use Tailwind CSS to manage theme switching cleanly, ensuring readability and aesthetic consistency in both modes.
+
+All other core and advanced features described should remain unchanged while respecting these color and mobile-first requirements.
