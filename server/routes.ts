@@ -33,11 +33,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
+  // Initialize default categories for new users
+  const initializeUserCategories = async (userId: string) => {
+    const existingCategories = await storage.getCategories(userId);
+    if (existingCategories.length === 0) {
+      const defaultCategories = [
+        { name: "Kitchen & Dining", icon: "utensils", color: "#f97316", userId },
+        { name: "Electronics", icon: "laptop", color: "#3b82f6", userId },
+        { name: "Personal Care", icon: "heart", color: "#ec4899", userId },
+        { name: "Household Items", icon: "home", color: "#10b981", userId },
+        { name: "Perishables", icon: "apple", color: "#ef4444", userId },
+        { name: "Furniture", icon: "armchair", color: "#8b5cf6", userId },
+        { name: "Clothing & Accessories", icon: "shirt", color: "#f59e0b", userId },
+        { name: "Tools & Hardware", icon: "wrench", color: "#6b7280", userId },
+        { name: "Books & Media", icon: "book", color: "#06b6d4", userId },
+        { name: "Sports & Recreation", icon: "dumbbell", color: "#84cc16", userId },
+        { name: "Automotive", icon: "car", color: "#dc2626", userId },
+        { name: "Health & Medical", icon: "pill", color: "#059669", userId },
+        { name: "Office Supplies", icon: "briefcase", color: "#4f46e5", userId },
+        { name: "Garden & Outdoor", icon: "flower", color: "#65a30d", userId },
+        { name: "Collectibles", icon: "gem", color: "#9333ea", userId },
+      ];
+      
+      for (const category of defaultCategories) {
+        await storage.createCategory(category);
+      }
+    }
+  };
+
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
+      
+      // Initialize default categories for new users
+      await initializeUserCategories(userId);
+      
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);

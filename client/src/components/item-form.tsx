@@ -185,16 +185,30 @@ export function ItemForm({ onSuccess, onCancel, prefilledData }: ItemFormProps) 
 
         <div>
           <Label htmlFor="categoryId">Category</Label>
-          <Select onValueChange={(value) => form.setValue("categoryId", value)}>
+          <Select 
+            onValueChange={(value) => form.setValue("categoryId", value)} 
+            value={form.watch("categoryId")}
+          >
             <SelectTrigger className="mt-1">
-              <SelectValue placeholder="Select category" />
+              <SelectValue placeholder="Choose category..." />
             </SelectTrigger>
             <SelectContent>
               {categories.map((category) => (
                 <SelectItem key={category.id} value={category.id.toString()}>
-                  {category.name}
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-3 h-3 rounded-full" 
+                      style={{ backgroundColor: category.color }}
+                    />
+                    <span>{category.name}</span>
+                  </div>
                 </SelectItem>
               ))}
+              {categories.length === 0 && (
+                <SelectItem value="loading" disabled>
+                  Loading categories...
+                </SelectItem>
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -215,25 +229,33 @@ export function ItemForm({ onSuccess, onCancel, prefilledData }: ItemFormProps) 
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label htmlFor="purchasePrice">Purchase Price</Label>
-            <Input
-              id="purchasePrice"
-              {...form.register("purchasePrice")}
-              placeholder="0.00"
-              type="number"
-              step="0.01"
-              className="mt-1"
-            />
+            <div className="relative mt-1">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">$</span>
+              <Input
+                id="purchasePrice"
+                {...form.register("purchasePrice")}
+                placeholder="0.00"
+                type="number"
+                step="0.01"
+                min="0"
+                className="pl-8"
+              />
+            </div>
           </div>
           <div>
-            <Label htmlFor="currentValue">Current Value</Label>
-            <Input
-              id="currentValue"
-              {...form.register("currentValue")}
-              placeholder="0.00"
-              type="number"
-              step="0.01"
-              className="mt-1"
-            />
+            <Label htmlFor="currentValue">Current Value / Estimated Worth</Label>
+            <div className="relative mt-1">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">$</span>
+              <Input
+                id="currentValue"
+                {...form.register("currentValue")}
+                placeholder="0.00"
+                type="number"
+                step="0.01"
+                min="0"
+                className="pl-8"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -299,10 +321,17 @@ export function ItemForm({ onSuccess, onCancel, prefilledData }: ItemFormProps) 
         </Button>
         <Button
           type="submit"
-          className="flex-1 tally-primary"
+          className="flex-1 tally-primary text-lg font-semibold py-3"
           disabled={createItemMutation.isPending}
         >
-          {createItemMutation.isPending ? "Adding..." : "Add Item"}
+          {createItemMutation.isPending ? (
+            <>
+              <span className="animate-spin mr-2">⏳</span>
+              Saving Item...
+            </>
+          ) : (
+            "💾 Save Entry"
+          )}
         </Button>
       </div>
     </form>

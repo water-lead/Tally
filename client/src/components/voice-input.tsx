@@ -320,6 +320,11 @@ export function VoiceInput({ onVoiceResult, onCancel }: VoiceInputProps) {
             <p className="text-sm text-muted-foreground">
               {isListening ? "Listening... speak clearly" : "Ready to listen"}
             </p>
+            {!isListening && !transcript && !voiceResult && (
+              <p className="text-xs text-muted-foreground mt-2 max-w-sm mx-auto">
+                Try saying: "Add a red coffee mug worth $15" or "I have a Samsung laptop in the office"
+              </p>
+            )}
           </div>
 
           {(transcript || interimTranscript) && (
