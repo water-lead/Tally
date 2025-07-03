@@ -12,7 +12,7 @@ import { storage } from "./storage";
   throw new Error("Environment variable REPLIT_DOMAINS not provided");
 }*/
 
-const getOidcConfig = memoize(
+/*const getOidcConfig = memoize(
   async () => {
     return await client.discovery(
       new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
@@ -20,7 +20,7 @@ const getOidcConfig = memoize(
     );
   },
   { maxAge: 3600 * 1000 }
-);
+);*/
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
@@ -115,7 +115,7 @@ export async function setupAuth(app: Express) {
     })(req, res, next);
   });
 
-  app.get("/api/logout", (req, res) => {
+  /*app.get("/api/logout", (req, res) => {
     req.logout(() => {
       res.redirect(
         client.buildEndSessionUrl(config, {
@@ -125,7 +125,7 @@ export async function setupAuth(app: Express) {
       );
     });
   });
-}
+}*/
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
